@@ -1,7 +1,3 @@
-/*
-manu11@bk.ru
-ATDbW5-.y6x&MxB
-*/
 import customHttp from './http.js';
 import formService from './formService.js';
 
