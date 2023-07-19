@@ -16,12 +16,17 @@ const newsService = () => {
         if (country === 'us') {
             language = "en";
         }
+        const  today = new Date();
+        let yesterday = today.setDate(today.getDate() - 1);
+        yesterday = new Date(yesterday);
+        yesterday = yesterday.toISOString().split('T')[0] + ' 00:00:00';
         const params = {
             "api-key": apiKey,
             "source-countries": country,
             "language": language,
             "sort": "publish-time",
             "sort-direction": "DESC",
+            "earliest-publish-date": yesterday,
             "number": 25
         };
         if (q) {
