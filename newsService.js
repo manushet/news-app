@@ -3,7 +3,7 @@ import formService from './formService.js';
 
 const newsService = () => {
     const apiKey = '78aabb27d13b4aed94bd1dc5ac2ac5d6';
-    const baseUrl = 'https://newsapi.org/v2/';
+    const baseUrl = 'https://newsapi.org/v2';
 
     const http = customHttp();
 
@@ -23,8 +23,6 @@ const newsService = () => {
         const countrySelected = form.country.value;
         const searchText = form.search.value;
 
-        console.log(countrySelected, searchText);
-
         showLoader(news_container);
 
         if (!searchText) {
@@ -39,6 +37,7 @@ const newsService = () => {
         hideLoader();
         if (err) {
             showErrorMessage(err, 'error-msg');
+            console.log(err);
             return false;
         }
 
