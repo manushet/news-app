@@ -2,8 +2,8 @@ import customHttp from './http.js';
 import formService from './formService.js';
 
 const newsService = () => {
-    const apiKey = '78aabb27d13b4aed94bd1dc5ac2ac5d6';
-    const baseUrl = 'https://newsapi.org/v2';
+    const apiKey = '8f6ecc34024d4a669e57eab1cdf2310c';
+    const baseUrl = 'https://api.worldnewsapi.com/search-news';  
 
     const http = customHttp();
 
@@ -11,12 +11,25 @@ const newsService = () => {
 
     const news_container = document.querySelector('.news-container .container .row');
 
-    const fetchTopHeadlines = (country = 'ru', fn) => {
-        http.get(`${baseUrl}/top-headlines?country=${country}&apiKey=${apiKey}`, fn);
-    }
-
-    const fetchAllNews = (query, fn) => {
-        http.get(`${baseUrl}/everything?q=${query}&apiKey=${apiKey}`, fn);
+    const fetchNews = (country = 'ru', q = null, fn) => {
+        let language = "ru";
+        if (country === 'us') {
+            language = "en";
+        }
+        const params = {
+            "api-key": apiKey,
+            "source-countries": country,
+            "language": language,
+            "sort": "publish-time",
+            "sort-direction": "DESC",
+            "number": 25
+        };
+        if (q) {
+            params.text = q;
+        }
+        const url_params = new URLSearchParams(params).toString();
+        const url = `${baseUrl}?${url_params}`;
+        http.get(url, fn);
     }
 
     const loadNews = () => {
@@ -24,33 +37,26 @@ const newsService = () => {
         const searchText = form.search.value;
 
         showLoader(news_container);
-
-        if (!searchText) {
-            fetchTopHeadlines(countrySelected, onGetResponse);
-        }
-        else {
-            fetchAllNews(searchText, onGetResponse);
-        }
+        fetchNews(countrySelected, searchText, onGetResponse);
     }
 
     function onGetResponse(err, res) {
         hideLoader();
+        //console.log(res);
+
         if (err) {
             showErrorMessage(err, 'error-msg');
-            console.log(err);
             return false;
         }
 
-        if (!res.articles.length) {
+        if (!res.news.length) {
             showErrorMessage('Found nothing, sorry...', 'error-msg');
             return false;            
         }
-        renderNews(res.articles);
+        renderNews(res.news);
     }
 
-    function renderNews(news) {        
-        console.log(news);
-        
+    function renderNews(news) {              
         let fragment = '';
         news.forEach(element => {
             const el = renderNewsRow(element);
@@ -61,24 +67,24 @@ const newsService = () => {
         news_container.insertAdjacentHTML('afterbegin', fragment);
     }
 
-    function renderNewsRow({author, content, description, publishedAt, source, title, url, urlToImage}) {
-        const img = urlToImage ? urlToImage : './noimage.jpg';
-        const short_title = title ? title.substr(0, 80) + '...' : '';
-        const news_desc = description ? description : title;
+    function renderNewsRow({id, title, text, url, image, publish_date, language, source_country}) {
+        const img = image ? image : './noimage.jpg';
+        const short_title = (title.length > 80) ? title.substr(0, 80) + '...' : title;
+
         return `
             <div class="col s6">
                 <div class="card">
                     <div class="card-image waves-effect waves-block waves-light">
-                        <img class="activator" src="${img}" alt="${title || ''}">
-                        <span class="card-title">${title || ''}</span>
+                        <img class="activator" src="${img}" alt="${url}">
+                        <span class="card-title">${title}</span>
                     </div>   
                     <div class="card-content">
-                        <span class="card-title activator grey-text text-darken-4">${short_title || ''}<i class="material-icons right">more_vert</i></span>
-                        <p><a href="${url}">${author}, ${publishedAt}</a></p>                            
+                        <span class="card-title activator grey-text text-darken-4">${short_title}<i class="material-icons right">more_vert</i></span>
+                        <p><a href="${url}">${publish_date}</a></p>                            
                     </div> 
                     <div class="card-reveal">
-                        <span class="card-title grey-text text-darken-4">${short_title || ''}<i class="material-icons right">close</i></span>
-                        <p>${news_desc || ''}</p>
+                        <span class="card-title grey-text text-darken-4">${short_title}<i class="material-icons right">close</i></span>
+                        <p>${text}</p>
                     </div>   
                 </div>         
             </div>
@@ -110,8 +116,7 @@ const newsService = () => {
     }    
 
     return {
-        fetchTopHeadlines, 
-        fetchAllNews, 
+        fetchNews, 
         loadNews, 
     };
 }
